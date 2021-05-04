@@ -1,9 +1,9 @@
 CC				:= gcc
-CFLAGS			:= -Wall -Wextra -g 
+CFLAGS			:= -Wall -Wextra -g -pthread
 SRC				:= src
-OBJ				:= extra
+OBJ				:= bin/extra
 BINDIR			:= bin
-SRCS			:= $(wildcard $(SRC)/*.c)
+SRCS			:= $(wildcard $(SRC)/*.c) $(wildcard $(SRC)/**/*.c)
 OBJS			:= $(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(SRCS))
 BIN				:= $(BINDIR)/server
 SUBMITFILE		:= server.zip
