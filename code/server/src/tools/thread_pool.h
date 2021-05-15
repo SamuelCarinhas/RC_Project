@@ -1,5 +1,6 @@
 #ifndef THREAD_POOL_HEADER
 #define THREAD_POOL_HEADER
+
 #include "../data_structures/queue.h"
 
 #include <pthread.h>

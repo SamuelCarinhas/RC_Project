@@ -26,9 +26,11 @@ server_t * new_server(int domain, int service, int protocol, u_long interface, i
         error("Couldn't bind the server socket");
     }
 
-    if(listen(server->socket, server->backlog) < 0) {
-        free(server);
-        error("Couldn't listen the server socket");
+    if(service == SOCK_STREAM) {
+        if(listen(server->socket, server->backlog) < 0) {
+            free(server);
+            error("Couldn't listen the server socket");
+        }
     }
 
     server->worker = worker;
