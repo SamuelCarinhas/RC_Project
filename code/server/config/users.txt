@@ -1,8 +1,1 @@
-{
-    "user-id":          "samuel",
-    "password":         "samuel123";
-    "ip":               "192.168.0.1",
-    "client-server":    "true",
-    "p2p":              "true",
-    "group":            "true"
-}
+samuel|samuel123|192.168.0.1|true|true|true

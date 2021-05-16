@@ -3,10 +3,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "commands/commands.h"
 #include "../network/server.h"
-#include "../commands/commands.h"
+#include "../config/config.h"
 
-#define ADMIN_PORT 7001
+#define ADMIN_PORT 7000
 
 extern void admin_server();
 

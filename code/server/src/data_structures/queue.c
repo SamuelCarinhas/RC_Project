@@ -1,7 +1,7 @@
 #include "queue.h"
 
 queue_t * new_queue() {
-    queue_t * queue = malloc(sizeof(queue_t));
+    queue_t * queue = (queue_t *) malloc(sizeof(queue_t));
 
     queue->size = 0;
     queue->start = NULL;
@@ -57,7 +57,7 @@ void print_queue(queue_t * queue, void (* printNode)(void *)) {
 }
 
 queue_node_t * new_queue_node(void * data, size_t data_size) {
-    queue_node_t * node = malloc(sizeof(queue_node_t));
+    queue_node_t * node = (queue_node_t *) malloc(sizeof(queue_node_t));
 
     node->data = malloc(data_size);
     memcpy(node->data, data, data_size);
