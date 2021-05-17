@@ -35,10 +35,7 @@ int cmd_function(admin_t * admin, char * command, int * exit) {
 void cmd_list(admin_t * admin, char * args, int * exit) {
     *exit = 0;
 
-    client_t * admin_client = new_client("", "", "", 1, 1, 1);
-    admin_client->client_socket = admin->socket;
-
-    avl_print_client(client_list, send_to_client, admin_client);
+    avl_print_client(client_list, send_to_client, admin->socket);
 }
 
 void cmd_add(admin_t * admin, char * args, int * exit) {

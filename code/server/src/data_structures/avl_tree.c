@@ -10,7 +10,7 @@ static avl_node_t * private_avl_add(avl_tree_t * tree, avl_node_t * new_node, av
 static avl_node_t * private_avl_remove(void * data);
 static void private_avl_print(avl_tree_t * tree, avl_node_t * node);
 static void * private_avl_get(avl_node_t * node);
-static void private_avl_print_client(avl_tree_t * tree, avl_node_t * node, void (* send_to_client)(void *, client_t * client), client_t * client);
+static void private_avl_print_client(avl_tree_t * tree, avl_node_t * node, void (* send_to_client)(void *, int socket), int socket);
 
 avl_tree_t * new_avl_tree(int (* data_cmp)(void *, void *), void (* print_data)(void *)) {
     avl_tree_t * tree = (avl_tree_t *) malloc(sizeof(avl_tree_t));
@@ -53,8 +53,8 @@ void avl_print(avl_tree_t * tree) {
     private_avl_print(tree, tree->root);
 }
 
-void avl_print_client(avl_tree_t * tree, void (* send_to_client)(void *, client_t * client), client_t * client) {
-    private_avl_print_client(tree, tree->root, send_to_client, client);
+void avl_print_client(avl_tree_t * tree, void (* send_to_client)(void *, int socket), int socket) {
+    private_avl_print_client(tree, tree->root, send_to_client, socket);
 }
 
 static avl_node_t * private_avl_add(avl_tree_t * tree, avl_node_t * new_node, avl_node_t * current_node) {
@@ -106,12 +106,12 @@ static void private_avl_print(avl_tree_t * tree, avl_node_t * node) {
     private_avl_print(tree, node->right);
 }
 
-static void private_avl_print_client(avl_tree_t * tree, avl_node_t * node, void (* send_to_client)(void *, client_t * client), client_t * client) {
+static void private_avl_print_client(avl_tree_t * tree, avl_node_t * node, void (* send_to_client)(void *, int socket), int socket) {
     if(node == NULL)
         return;
-    private_avl_print_client(tree, node->left, send_to_client, client);
-    send_to_client(node->data, client);
-    private_avl_print_client(tree, node->right, send_to_client, client);
+    private_avl_print_client(tree, node->left, send_to_client, socket);
+    send_to_client(node->data, socket);
+    private_avl_print_client(tree, node->right, send_to_client, socket);
 }
 
 static int get_height(avl_node_t * node) {

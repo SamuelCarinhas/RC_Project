@@ -15,7 +15,7 @@ extern client_t * new_client(char * username, char * password, char * ip, int cl
 
 extern void free_client(client_t * client);
 extern void client_print(void * client);
-extern void send_to_client(void * data, client_t * client);
+extern void send_to_client(void * data, int socket);
 
 extern int client_cmp(void * a, void * b);
 

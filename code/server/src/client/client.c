@@ -11,10 +11,10 @@ void client_print(void * client) {
     printf("%s\n", ((client_t *) client)->username);
 }
 
-void send_to_client(void * data, client_t * client) {
+void send_to_client(void * data, int socket) {
     char message[BUFFER_SIZE] = {0};
     snprintf(message, BUFFER_SIZE, "User: %s\n", ((client_t *) data)->username);
-    write(client->client_socket, message, BUFFER_SIZE);
+    write(socket, message, BUFFER_SIZE);
 }
 
 client_t * new_client(char * username, char * password, char * ip, int client_server, int p2p, int group) {
