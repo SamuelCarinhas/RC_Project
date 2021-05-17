@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "../client/client_struct.h"
 
 typedef struct avl_node avl_node_t;
 typedef struct avl_tree avl_tree_t;
@@ -28,6 +29,7 @@ extern avl_node_t * new_avl_node(void * data, size_t data_size);
 extern void avl_add(avl_tree_t * tree, void * node, size_t data_size);
 extern void avl_remove(avl_tree_t * tree, void * node);
 extern void avl_print(avl_tree_t * tree);
+extern void avl_print_client(avl_tree_t * tree, void (* send_to_client)(void *, client_t * client), client_t * client);
 
 extern void * avl_get(avl_tree_t * tree, void * data);
 

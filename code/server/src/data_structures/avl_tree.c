@@ -10,6 +10,7 @@ static avl_node_t * private_avl_add(avl_tree_t * tree, avl_node_t * new_node, av
 static avl_node_t * private_avl_remove(void * data);
 static void private_avl_print(avl_tree_t * tree, avl_node_t * node);
 static void * private_avl_get(avl_node_t * node);
+static void private_avl_print_client(avl_tree_t * tree, avl_node_t * node, void (* send_to_client)(void *, client_t * client), client_t * client);
 
 avl_tree_t * new_avl_tree(int (* data_cmp)(void *, void *), void (* print_data)(void *)) {
     avl_tree_t * tree = (avl_tree_t *) malloc(sizeof(avl_tree_t));
@@ -37,6 +38,7 @@ avl_node_t * new_avl_node(void * data, size_t data_size) {
 void avl_add(avl_tree_t * tree, void * data, size_t data_size) {
     avl_node_t * node = new_avl_node(data, data_size);
     tree->root = private_avl_add(tree, node, tree->root);
+    tree->size++;
 }
 
 void avl_remove(avl_tree_t * tree, void * data) {
@@ -49,6 +51,10 @@ void * avl_get(avl_tree_t * tree, void * data) {
 
 void avl_print(avl_tree_t * tree) {
     private_avl_print(tree, tree->root);
+}
+
+void avl_print_client(avl_tree_t * tree, void (* send_to_client)(void *, client_t * client), client_t * client) {
+    private_avl_print_client(tree, tree->root, send_to_client, client);
 }
 
 static avl_node_t * private_avl_add(avl_tree_t * tree, avl_node_t * new_node, avl_node_t * current_node) {
@@ -98,6 +104,14 @@ static void private_avl_print(avl_tree_t * tree, avl_node_t * node) {
     private_avl_print(tree, node->left);
     tree->print_data(node->data);
     private_avl_print(tree, node->right);
+}
+
+static void private_avl_print_client(avl_tree_t * tree, avl_node_t * node, void (* send_to_client)(void *, client_t * client), client_t * client) {
+    if(node == NULL)
+        return;
+    private_avl_print_client(tree, node->left, send_to_client, client);
+    send_to_client(node->data, client);
+    private_avl_print_client(tree, node->right, send_to_client, client);
 }
 
 static int get_height(avl_node_t * node) {

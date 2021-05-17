@@ -7,6 +7,7 @@
 #include <sys/wait.h>
 #include "data_structures/avl_tree.h"
 #include "utils/string.h"
+#include "admin/admin_server.h"
 
 void create_proccess(void ( *function)(void)) {
     if(fork() == 0) {
@@ -28,7 +29,11 @@ int data_cmp(void * a, void * b) {
 }
 
 int main() {
-    avl_tree_t * tree = new_avl_tree(data_cmp, print_node);
+    /*avl_tree_t * tree = new_avl_tree(data_cmp, print_node);
+
+    FILE * fp = fopen("data.bin", "wb");
+    fwrite(&tree->size, sizeof(size_t), 1, fp);
+    fwrite(tree, sizeof(avl_tree_t), 1, fp);
 
     char a[] = "B";
     char b[] = "D";
@@ -40,11 +45,12 @@ int main() {
     avl_add(tree, c, STRING_SIZE(c));
     avl_add(tree, d, STRING_SIZE(d));
 
-    avl_print(tree);
+    printf("Size: %ld\n", sizeof(*tree));
+    avl_print(tree);*/
 
-    //create_proccess(admin_server);
-
-    //wait_for_children();
+    create_proccess(admin_server);
+    
+    wait_for_children();
 
     return 0;
 }
