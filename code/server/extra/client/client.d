@@ -5,4 +5,6 @@ extra/client/client.o: src/client/client.c src/client/client.h \
  src/client/../config/config.h src/client/../network/server.h \
  src/client/../network/../utils/functions.h \
  src/client/../network/../utils/../config/config.h \
- src/client/../network/../utils/../client/client_struct.h
+ src/client/../network/../utils/../client/client_struct.h \
+ src/client/../memory/memory.h \
+ src/client/../memory/../data_structures/avl_tree.h

@@ -19,9 +19,11 @@
 #include "../config/config.h"
 #include "../client/client_struct.h"
 
+#define UNUSED(variable) (void)(variable)
+
 extern void error(char *, ...);
 extern void center_text(int width, char * format, ...);
 extern void write_fd(int fd, char * format, ...);
-extern void send_udp_message(client_session_t * client, char * format, ...);
+extern int send_udp_message(client_session_t * client, char * format, ...);
 
 #endif

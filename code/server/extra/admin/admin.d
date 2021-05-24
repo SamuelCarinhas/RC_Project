@@ -7,4 +7,6 @@ extra/admin/admin.o: src/admin/admin.c src/admin/admin.h \
  src/admin/../client/../network/server.h \
  src/admin/../client/../network/../utils/functions.h \
  src/admin/../client/../network/../utils/../config/config.h \
- src/admin/../client/../network/../utils/../client/client_struct.h
+ src/admin/../client/../network/../utils/../client/client_struct.h \
+ src/admin/../client/../memory/memory.h \
+ src/admin/../client/../memory/../data_structures/avl_tree.h

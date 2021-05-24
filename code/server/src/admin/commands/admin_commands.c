@@ -35,14 +35,14 @@ int cmd_function(admin_t * admin, char * command, int * exit) {
 
 void cmd_list(admin_t * admin, char * args, int * exit) {
     *exit = 0;
-
+    UNUSED(args);
     avl_print_client(user_list, send_to_client, admin->socket);
 }
 
 void cmd_add(admin_t * admin, char * args, int * exit) {
     *exit = 0;
 
-    char username[USERNAME_SIZE], password[PASSWORD_SIZE], ip[IP_SIZE];
+    char username[USERNAME_SIZE], password[PASSWORD_SIZE], ip[INET_ADDRSTRLEN];
     int client_server, p2p, group;
 
     int res = sscanf(args, "%s %s %s %d %d %d", username, ip, password, &client_server, &p2p, &group);
@@ -80,6 +80,8 @@ void cmd_del(admin_t * admin, char * args, int * exit) {
 }
 
 void cmd_quit(admin_t * admin, char * args, int * exit) {
+    UNUSED(admin);
+    UNUSED(args);
     *exit = 1;
 }
 

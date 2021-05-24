@@ -11,8 +11,9 @@ extra/client/commands/client_commands.o: \
  src/client/commands/../../network/../utils/functions.h \
  src/client/commands/../../network/../utils/../config/config.h \
  src/client/commands/../../network/../utils/../client/client_struct.h \
+ src/client/commands/../../memory/memory.h \
+ src/client/commands/../../memory/../data_structures/avl_tree.h \
  src/client/commands/../../utils/string.h \
  src/client/commands/../../utils/functions.h \
  src/client/commands/../../memory/memory.h \
- src/client/commands/../../memory/../data_structures/avl_tree.h \
  src/client/commands/../../data_structures/avl_tree.h

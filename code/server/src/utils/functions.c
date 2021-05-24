@@ -1,15 +1,19 @@
 #include "functions.h"
 
-void send_udp_message(client_session_t * client, char * format, ...) {
+int send_udp_message(client_session_t * client, char * format, ...) {
     va_list args;
     va_start(args, format);
 
     char message[BUFFER_SIZE] = {0};
     vsnprintf(message, BUFFER_SIZE, format, args);
     
-    sendto(client->socket, message, BUFFER_SIZE, 0, (struct sockaddr *) &client->sock, client->len);
+    int res = sendto(client->socket, message, BUFFER_SIZE, 0, (struct sockaddr *) &client->sock, client->len);
+
+    printf("%d\n", client->sock.sin_port);
 
     va_end(args);
+
+    return res;
 }
 
 void write_fd(int fd, char * format, ...) {

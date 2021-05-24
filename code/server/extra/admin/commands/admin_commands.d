@@ -14,4 +14,5 @@ extra/admin/commands/admin_commands.o: \
  src/admin/commands/../../client/../data_structures/avl_tree.h \
  src/admin/commands/../../client/../config/config.h \
  src/admin/commands/../../client/../network/server.h \
- src/admin/commands/../../client/../network/../utils/functions.h
+ src/admin/commands/../../client/../network/../utils/functions.h \
+ src/admin/commands/../../client/../memory/memory.h

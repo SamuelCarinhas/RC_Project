@@ -21,22 +21,39 @@
 pthread_t admin_thread, client_thread;
 
 avl_tree_t * user_list;
-
-void create_server_thread(void ( *function), int * port, pthread_t * thread) {
-    pthread_create(thread, NULL, function, port);
-}
+avl_tree_t * user_session_list;
 
 void print_node(void * data) {
     printf("%s\n", (char *) data);
+}
+
+void print_session(void * data) {
+    client_session_t * session = (client_session_t *) data;
+    printf("(%s:%d) %s\n", session->ip, session->port, session->client->username);
 }
 
 int data_cmp(void * a, void * b) {
     return strcmp((char *) a, (char *) b);
 }
 
+int session_cmp(void * a, void * b) {
+    client_session_t * session_a = (client_session_t *) a,
+                        * session_b = (client_session_t *) b;
+    
+    int ip_cmp = strcmp(session_a->ip, session_b->ip);
+    if(ip_cmp != 0)
+        return ip_cmp;
+    else
+        return session_a->port - session_b->port;
+}
+
 void signal_sigint() {
     printf("Hello there\n");
     exit(0);
+}
+
+void create_server_thread(void ( *function), int * port, pthread_t * thread) {
+    pthread_create(thread, NULL, function, port);
 }
 
 int main(int arg_count, char * args[]) {
@@ -62,17 +79,16 @@ int main(int arg_count, char * args[]) {
         error("Couldn't open/create records file");
 
     user_list = new_avl_tree(data_cmp, print_node, records_fd);
+    user_session_list = new_avl_tree(session_cmp, print_session, -1);
 
-    // Load data from records file
     int n_read;
-    client_t * client = (client_t *) malloc(sizeof(client_t));
+    client_t client;
     while(1) {
-        n_read = read(records_fd, client, sizeof(client_t)); 
+        n_read = read(records_fd, &client, sizeof(client_t)); 
         if(n_read <= 0)
             break;
-        avl_add(user_list, client, sizeof(client_t), 0, 0);
+        avl_add(user_list, &client, sizeof(client_t), 0, 0);
     }
-    free(client);
 
     create_server_thread(admin_server, &config_port, &admin_thread);
     create_server_thread(client_server, &client_port, &client_thread);

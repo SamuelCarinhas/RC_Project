@@ -15,5 +15,6 @@ extra/admin/admin_server.o: src/admin/admin_server.c \
  src/admin/commands/../../client/../config/config.h \
  src/admin/commands/../../client/../network/server.h \
  src/admin/commands/../../client/../network/../utils/functions.h \
+ src/admin/commands/../../client/../memory/memory.h \
  src/admin/../network/server.h src/admin/../config/config.h \
  src/admin/../utils/functions.h src/admin/admin.h

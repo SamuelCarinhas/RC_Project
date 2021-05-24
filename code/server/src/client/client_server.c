@@ -11,7 +11,7 @@ static void udp_server_worker(server_t * server) {
 
     struct sockaddr_in client_sock;
 
-    client_session_t client_session;
+    client_session_t * client_session;
 
     int exit;
     while(1) {
@@ -22,10 +22,10 @@ static void udp_server_worker(server_t * server) {
         buffer[n] = '\0';
         remove_end_line(buffer);
 
-        init_client_session(&client_session, &client_sock, len, server->socket);
+        client_session = init_client_session(&client_sock, len, server->socket);
 
-        if(!client_cmd_function(&client_session, buffer, &exit))
-            send_udp_message(&client_session, "Command not found\n");
+        if(!client_cmd_function(client_session, buffer, &exit))
+            send_udp_message(client_session, "Command not found\n");
     }
 }
 
