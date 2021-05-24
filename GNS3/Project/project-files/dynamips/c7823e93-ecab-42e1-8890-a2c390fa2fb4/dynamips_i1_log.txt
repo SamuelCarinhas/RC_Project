@@ -1,0 +1,19 @@
+May 24 12:03:28.607 HYPERVISOR: Release 0.2.21-amd64/Linux (tag 2019071212)
+May 24 12:03:28.608 HYPERVISOR: Started on IP = localhost, TCP port = 40719.
+May 24 12:03:28.618 HYPERVISOR: exec_cmd: hypervisor version 
+May 24 12:03:28.618 HYPERVISOR: exec_cmd: hypervisor working_dir /home/samuel/UC/RC/RC_Project/GNS3/Project/project-files/dynamips 
+May 24 12:03:28.618 GENERAL: working_dir=/home/samuel/UC/RC/RC_Project/GNS3/Project/project-files/dynamips
+May 24 12:03:28.618 HYPERVISOR: exec_cmd: ethsw create Switch1 
+May 24 12:03:29.647 HYPERVISOR: exec_cmd: nio create_udp udp-e0a8a715-bbfe-42af-b980-c2fa68569a1a 10013 127.0.0.1 10012 
+May 24 12:03:29.647 HYPERVISOR: exec_cmd: ethsw add_nio Switch1 udp-e0a8a715-bbfe-42af-b980-c2fa68569a1a 
+May 24 12:03:29.662 HYPERVISOR: exec_cmd: ethsw set_access_port Switch1 udp-e0a8a715-bbfe-42af-b980-c2fa68569a1a 1 
+May 24 12:03:30.223 HYPERVISOR: exec_cmd: nio create_udp udp-3c76bce9-8063-4871-bc11-96f4dfc940bb 10025 127.0.0.1 10024 
+May 24 12:03:30.224 HYPERVISOR: exec_cmd: ethsw add_nio Switch1 udp-3c76bce9-8063-4871-bc11-96f4dfc940bb 
+May 24 12:03:30.244 HYPERVISOR: exec_cmd: ethsw set_access_port Switch1 udp-3c76bce9-8063-4871-bc11-96f4dfc940bb 1 
+May 24 12:03:30.288 HYPERVISOR: exec_cmd: nio create_udp udp-55f35495-35a6-4df7-a7d8-a8427e99e44f 10028 127.0.0.1 10029 
+May 24 12:03:30.288 HYPERVISOR: exec_cmd: ethsw add_nio Switch1 udp-55f35495-35a6-4df7-a7d8-a8427e99e44f 
+May 24 12:03:30.304 HYPERVISOR: exec_cmd: ethsw set_access_port Switch1 udp-55f35495-35a6-4df7-a7d8-a8427e99e44f 1 
+May 24 12:08:14.782 HYPERVISOR: exec_cmd: ethsw delete Switch1 
+May 24 12:08:14.839 HYPERVISOR: exec_cmd: hypervisor stop 
+May 24 12:08:14.848 HYPERVISOR: Stopped.
+May 24 12:08:14.848 GENERAL: reset done.
