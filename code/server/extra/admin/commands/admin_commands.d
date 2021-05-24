@@ -8,6 +8,7 @@ extra/admin/commands/admin_commands.o: \
  src/admin/commands/../../config/config.h \
  src/admin/commands/../../utils/functions.h \
  src/admin/commands/../../utils/../config/config.h \
+ src/admin/commands/../../utils/../client/client_struct.h \
  src/admin/commands/../admin.h src/admin/commands/../../client/client.h \
  src/admin/commands/../../client/client_struct.h \
  src/admin/commands/../../client/../data_structures/avl_tree.h \

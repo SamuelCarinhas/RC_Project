@@ -74,7 +74,10 @@ int avl_remove(avl_tree_t * tree, void * data, size_t data_size, int free_data, 
 }
 
 void * avl_get(avl_tree_t * tree, void * data) {
-    return private_avl_get(tree, tree->root, data);
+    avl_node_t * node = private_avl_get(tree, tree->root, data);
+    if(node == NULL)
+        return node;
+    return node->data;
 }
 
 void avl_print(avl_tree_t * tree) {

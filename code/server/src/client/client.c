@@ -34,3 +34,11 @@ client_t * new_client(char * username, char * password, char * ip, int client_se
 void free_client(client_t * client) {
     free(client);
 }
+
+void init_client_session(client_session_t * session, struct sockaddr_in * sock, socklen_t len, int socket) {
+    session->sock = *sock;
+    session->len = len;
+    inet_ntop(AF_INET, &sock->sin_addr, session->ip, INET_ADDRSTRLEN);
+    session->socket = socket;
+    session->port = sock->sin_port;
+}

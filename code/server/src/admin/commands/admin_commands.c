@@ -49,7 +49,7 @@ void cmd_add(admin_t * admin, char * args, int * exit) {
 
 
     if(res != 6) {
-        write_fd(admin->socket, "Invalid usage! Use: /ADD <USER-ID> <IP> <PASSWORD> <CLIENT-SERVER> <P2P> <GROUP>\n");
+        write_fd(admin->socket, "Invalid usage! Use: ADD <USER-ID> <IP> <PASSWORD> <CLIENT-SERVER> <P2P> <GROUP>\n");
     } else {
         client_t * client = new_client(username, password, ip, client_server, p2p, group);
         res = avl_add(user_list, client, sizeof(client_t), 1, 1);
@@ -68,7 +68,7 @@ void cmd_del(admin_t * admin, char * args, int * exit) {
     int res = sscanf(args, "%s", username);
 
     if(res != 1) {
-        write_fd(admin->socket, "Invalid usage! Use /DEL <USER-ID>\n");
+        write_fd(admin->socket, "Invalid usage! Use: DEL <USER-ID>\n");
     } else {
         client_t * client = new_client(username, "", "", 1, 1, 1);
         res = avl_remove(user_list, client, sizeof(client_t), 1, 1);
