@@ -1,7 +1,8 @@
 extra/admin/admin_server.o: src/admin/admin_server.c \
- src/admin/admin_server.h src/admin/commands/commands.h \
+ src/admin/admin_server.h src/admin/commands/admin_commands.h \
  src/admin/commands/../../memory/memory.h \
  src/admin/commands/../../memory/../data_structures/avl_tree.h \
+ src/admin/commands/../../memory/../data_structures/../config/config.h \
  src/admin/commands/../../memory/../data_structures/../client/client_struct.h \
  src/admin/commands/../../utils/string.h \
  src/admin/commands/../../config/config.h \

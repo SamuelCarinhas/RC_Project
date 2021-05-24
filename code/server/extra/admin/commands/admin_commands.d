@@ -1,6 +1,8 @@
-extra/admin/commands/commands.o: src/admin/commands/commands.c \
- src/admin/commands/commands.h src/admin/commands/../../memory/memory.h \
+extra/admin/commands/admin_commands.o: \
+ src/admin/commands/admin_commands.c src/admin/commands/admin_commands.h \
+ src/admin/commands/../../memory/memory.h \
  src/admin/commands/../../memory/../data_structures/avl_tree.h \
+ src/admin/commands/../../memory/../data_structures/../config/config.h \
  src/admin/commands/../../memory/../data_structures/../client/client_struct.h \
  src/admin/commands/../../utils/string.h \
  src/admin/commands/../../config/config.h \

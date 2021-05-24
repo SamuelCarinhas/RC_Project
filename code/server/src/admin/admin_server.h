@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "commands/commands.h"
+#include "commands/admin_commands.h"
 #include "../network/server.h"
 #include "../config/config.h"
 #include "../utils/functions.h"

@@ -63,6 +63,7 @@ int main(int arg_count, char * args[]) {
 
     user_list = new_avl_tree(data_cmp, print_node, records_fd);
 
+    // Load data from records file
     int n_read;
     client_t * client = (client_t *) malloc(sizeof(client_t));
     while(1) {

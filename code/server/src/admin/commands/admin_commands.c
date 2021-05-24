@@ -1,4 +1,4 @@
-#include "commands.h"
+#include "admin_commands.h"
 
 static void write_admin_log(char * format, ...);
 
@@ -42,7 +42,7 @@ void cmd_list(admin_t * admin, char * args, int * exit) {
 void cmd_add(admin_t * admin, char * args, int * exit) {
     *exit = 0;
 
-    char username[16], password[30], ip[20];
+    char username[USERNAME_SIZE], password[PASSWORD_SIZE], ip[IP_SIZE];
     int client_server, p2p, group;
 
     int res = sscanf(args, "%s %s %s %d %d %d", username, ip, password, &client_server, &p2p, &group);
@@ -63,6 +63,20 @@ void cmd_add(admin_t * admin, char * args, int * exit) {
 
 void cmd_del(admin_t * admin, char * args, int * exit) {
     *exit = 0;
+
+    char username[USERNAME_SIZE];
+    int res = sscanf(args, "%s", username);
+
+    if(res != 1) {
+        write_fd(admin->socket, "Invalid usage! Use /DEL <USER-ID>\n");
+    } else {
+        client_t * client = new_client(username, "", "", 1, 1, 1);
+        res = avl_remove(user_list, client, sizeof(client_t), 1, 1);
+        if(res == AVL_KEY_NOT_FOUND)
+            write_fd(admin->socket, "User not found\n");
+        else
+            write_fd(admin->socket, "User %s deleted.\n", username);
+    }
 }
 
 void cmd_quit(admin_t * admin, char * args, int * exit) {

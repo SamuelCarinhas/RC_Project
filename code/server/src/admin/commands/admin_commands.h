@@ -1,5 +1,5 @@
-#ifndef COMMANDS_HEADER
-#define COMMANDS_HEADER
+#ifndef ADMIN_COMMANDS_HEADER
+#define ADMIN_COMMANDS_HEADER
 
 #include <stdio.h>
 #include <stdarg.h>

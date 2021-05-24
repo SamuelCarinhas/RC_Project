@@ -3,14 +3,15 @@
 static int get_height(avl_node_t * node);
 static int get_balance(avl_node_t * node);
 
-static avl_node_t * right_rotation(avl_node_t * node);
 static avl_node_t * left_rotation(avl_node_t * node);
+static avl_node_t * right_rotation(avl_node_t * node);
 
-static avl_node_t * private_avl_remove(void * data);
 static avl_node_t * private_avl_get(avl_tree_t * tree, avl_node_t * current, void * data);
+static avl_node_t * private_avl_remove(avl_tree_t * tree, avl_node_t * current, void * data);
 static avl_node_t * private_avl_add(avl_tree_t * tree, avl_node_t * new_node, avl_node_t * current_node);
 
 static void private_avl_print(avl_tree_t * tree, avl_node_t * node);
+static void private_avl_rewrite(avl_tree_t * tree, avl_node_t * current, size_t data_size);
 static void private_avl_print_client(avl_tree_t * tree, avl_node_t * node, void (* send_to_client)(void *, int socket), int socket);
 
 avl_tree_t * new_avl_tree(int (* data_cmp)(void *, void *), void (* print_data)(void *), int fd) {
@@ -55,8 +56,21 @@ int avl_add(avl_tree_t * tree, void * data, size_t data_size, int free_data, int
     return AVL_OK;
 }
 
-void avl_remove(avl_tree_t * tree, void * data) {
-    tree->root = private_avl_remove(data);
+int avl_remove(avl_tree_t * tree, void * data, size_t data_size, int free_data, int write_data) {
+    if(private_avl_get(tree, tree->root, data) == NULL)
+        return AVL_KEY_NOT_FOUND;
+
+    tree->root = private_avl_remove(tree, tree->root, data);
+
+    if(free_data)
+        free(data);
+    
+    if(write_data) {
+        ftruncate(tree->fd, 0);
+        private_avl_rewrite(tree, tree->root, data_size);
+    }
+
+    return AVL_OK;
 }
 
 void * avl_get(avl_tree_t * tree, void * data) {
@@ -69,6 +83,14 @@ void avl_print(avl_tree_t * tree) {
 
 void avl_print_client(avl_tree_t * tree, void (* send_to_client)(void *, int socket), int socket) {
     private_avl_print_client(tree, tree->root, send_to_client, socket);
+}
+
+static void private_avl_rewrite(avl_tree_t * tree, avl_node_t * current, size_t data_size) {
+    if(current == NULL)
+        return;
+    private_avl_rewrite(tree, current->left, data_size);
+    write(tree->fd, current->data, data_size);
+    private_avl_rewrite(tree, current->right, data_size);
 }
 
 static avl_node_t * private_avl_add(avl_tree_t * tree, avl_node_t * new_node, avl_node_t * current_node) {
@@ -104,8 +126,48 @@ static avl_node_t * private_avl_add(avl_tree_t * tree, avl_node_t * new_node, av
     return current_node;
 }
 
-static avl_node_t * private_avl_remove(void * data) {
-    return NULL;
+static avl_node_t * private_avl_remove(avl_tree_t * tree, avl_node_t * current, void * data) {
+    if(current == NULL)
+        return current;
+
+    int res = tree->data_cmp(data, current->data);
+
+    if(res < 0)
+        current->left = private_avl_remove(tree, current->left, data);
+    else if(res > 0)
+        current->right = private_avl_remove(tree, current->right, data);
+    else {
+        if(current->left == NULL || current->right == NULL) {
+            avl_node_t * temp = (current->left != NULL) ? current->left : current->right;
+
+            if(temp == NULL) {
+                temp = current;
+                current = NULL;
+            } else
+                *current = *temp;
+
+            free(temp);
+        }
+    }
+
+    if(current == NULL)
+        return current;
+    
+    current->height = 1 + (get_height(current->left) > get_height(current->right)) ? get_height(current->left) : get_height(current->right);
+
+    int balance = get_balance(current);
+
+    if(balance > 1) {
+        if(get_balance(current->left) < 0)
+            current->left = left_rotation(current->left);
+        return right_rotation(current);
+    } else if(balance < -1) {
+        if(get_balance(current->right) > 0)
+            current->right = right_rotation(current->right);
+        return left_rotation(current);
+    }
+
+    return current;
 }
 
 static avl_node_t * private_avl_get(avl_tree_t * tree, avl_node_t * current, void * data) {
