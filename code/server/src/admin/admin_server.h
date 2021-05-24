@@ -6,6 +6,7 @@
 #include "commands/commands.h"
 #include "../network/server.h"
 #include "../config/config.h"
+#include "admin.h"
 
 #define ADMIN_PORT 7000
 

@@ -4,7 +4,7 @@ static server_t * udp_server;
 
 static void udp_server_worker(server_t * server) {
     center_text(40, "---------------------------------------");
-    center_text(40, "SERVER OPEN");
+    center_text(40, "CLIENT SERVER OPEN");
     center_text(40, "IP: %d", server->address.sin_addr.s_addr);
     center_text(40, "PORT: %d", server->port);
     center_text(40, "---------------------------------------");

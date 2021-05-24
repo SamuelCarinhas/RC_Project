@@ -7,17 +7,19 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include "../../utils/string.h"
+#include "../../config/config.h"
+#include "../admin.h"
 
 #define CMD_DEBUG_FLAG
 
 extern char * commands[];
-extern void (* cmd_functions[])(struct sockaddr_in *, char *, int *);
+extern void (* cmd_functions[])(admin_t * admin, char * command, int * exit);
 
-extern int cmd_function(struct sockaddr_in * client, char * command, int * exit);
+extern int cmd_function(admin_t * admin, char * command, int * exit);
 
-extern void cmd_list(struct sockaddr_in * client, char * command, int * exit);
-extern void cmd_add(struct sockaddr_in * client, char * command, int * exit);
-extern void cmd_del(struct sockaddr_in * client, char * command, int * exit);
-extern void cmd_quit(struct sockaddr_in * client, char * command, int * exit);
+extern void cmd_list(admin_t * admin, char * command, int * exit);
+extern void cmd_add(admin_t * admin, char * command, int * exit);
+extern void cmd_del(admin_t * admin, char * command, int * exit);
+extern void cmd_quit(admin_t * admin, char * command, int * exit);
 
 #endif
