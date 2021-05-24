@@ -1,5 +1,16 @@
 #include "functions.h"
 
+void write_fd(int fd, char * format, ...) {
+    va_list args;
+    va_start(args, format);
+
+    char message[BUFFER_SIZE] = {0};
+    vsnprintf(message, BUFFER_SIZE, format, args);
+    write(fd, message, BUFFER_SIZE);
+
+    va_end(args);
+}
+
 void error(char * format, ...) {
     va_list args;
     va_start(args, format);

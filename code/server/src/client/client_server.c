@@ -14,8 +14,9 @@ static void udp_server_worker(server_t * server) {
         char buffer[1000];
         int n = recvfrom(server->socket, buffer, 1000, MSG_WAITALL, 0, &len);
         buffer[n] = '\0';
+        remove_end_line(buffer);
 
-        printf("%s\n", buffer);
+        printf("[CLIENT] %s\n", buffer);
     }
 }
 

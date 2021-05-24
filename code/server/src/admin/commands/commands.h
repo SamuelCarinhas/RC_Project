@@ -6,8 +6,10 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include "../../memory/memory.h"
 #include "../../utils/string.h"
 #include "../../config/config.h"
+#include "../../utils/functions.h"
 #include "../admin.h"
 
 #define CMD_DEBUG_FLAG

@@ -12,7 +12,6 @@ struct client {
     char password[PASSWORD_SIZE];
     char ip[IP_SIZE];
 
-    int client_socket;
     int client_server;
     int p2p;
     int group;

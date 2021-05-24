@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../network/server.h"
+#include "../utils/string.h"
 
 extern void client_server(int * port);
 

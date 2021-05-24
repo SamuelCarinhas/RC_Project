@@ -22,20 +22,21 @@ int cmd_function(admin_t * admin, char * command, int * exit) {
     char * args;
     strtok_r(command, " ", &args);
 
+    write_admin_log("User executed: %s %s\n", command, args);
     for(size_t i = 0; i < sizeof(commands)/sizeof(commands[0]); i++) {
         if(parse_cmd(command, commands[i])) {
-            write_admin_log("User executed: %s %s\n", command, args);
             cmd_functions[i](admin, args, exit);
             return 1;
         }
     }
+    
     return 0;
 }
 
 void cmd_list(admin_t * admin, char * args, int * exit) {
     *exit = 0;
 
-    avl_print_client(client_list, send_to_client, admin->socket);
+    avl_print_client(user_list, send_to_client, admin->socket);
 }
 
 void cmd_add(admin_t * admin, char * args, int * exit) {
@@ -48,15 +49,14 @@ void cmd_add(admin_t * admin, char * args, int * exit) {
 
 
     if(res != 6) {
-        char message[BUFFER_SIZE] = {0};
-        snprintf(message, BUFFER_SIZE, "Invalid usage! Use: /ADD <USER-ID> <IP> <PASSWORD> <CLIENT-SERVER> <P2P> <GROUP>\n");
-        write(admin->socket, message, BUFFER_SIZE);
+        write_fd(admin->socket, "Invalid usage! Use: /ADD <USER-ID> <IP> <PASSWORD> <CLIENT-SERVER> <P2P> <GROUP>\n");
     } else {
         client_t * client = new_client(username, password, ip, client_server, p2p, group);
-        avl_add(client_list, client, sizeof(client_t));
-        char message[BUFFER_SIZE] = {0};
-        snprintf(message, BUFFER_SIZE, "User %s created.\n", username);
-        write(admin->socket, message, BUFFER_SIZE);
+        res = avl_add(user_list, client, sizeof(client_t), 1, 1);
+        if(res == AVL_DUPLICATED_KEY)
+            write_fd(admin->socket, "User already exists\n");
+        else
+            write_fd(admin->socket, "User %s created.\n", username);
     }
 
 }

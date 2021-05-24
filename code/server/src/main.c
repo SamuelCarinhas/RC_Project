@@ -4,16 +4,23 @@
 #include <string.h>
 #include <stdarg.h>
 #include <unistd.h> 
+#include <pthread.h>
+#include <fcntl.h>
 #include <sys/wait.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "data_structures/avl_tree.h"
 #include "utils/string.h"
 #include "utils/numeric.h"
 #include "admin/admin_server.h"
 #include "client/client_server.h"
+#include "client/client_struct.h"
 #include "config/config.h"
-#include <pthread.h>
+#include "memory/memory.h"
 
 pthread_t admin_thread, client_thread;
+
+avl_tree_t * user_list;
 
 void create_server_thread(void ( *function), int * port, pthread_t * thread) {
     pthread_create(thread, NULL, function, port);
@@ -27,7 +34,14 @@ int data_cmp(void * a, void * b) {
     return strcmp((char *) a, (char *) b);
 }
 
+void signal_sigint() {
+    printf("Hello there\n");
+    exit(0);
+}
+
 int main(int arg_count, char * args[]) {
+    signal(SIGINT, signal_sigint);
+
     if(arg_count != 4)
         error("Invalid usage: Use ./server <CLIENT_PORT> <CONFIG_PORT> <RECORDS_FILE>\n");
 
@@ -41,6 +55,23 @@ int main(int arg_count, char * args[]) {
         error("Error parsing config port\n");
 
     strcpy(file, args[3]);
+
+    int records_fd = open(file, O_CREAT | O_RDWR | O_APPEND, 0644);
+
+    if(records_fd < 0)
+        error("Couldn't open/create records file");
+
+    user_list = new_avl_tree(data_cmp, print_node, records_fd);
+
+    int n_read;
+    client_t * client = (client_t *) malloc(sizeof(client_t));
+    while(1) {
+        n_read = read(records_fd, client, sizeof(client_t)); 
+        if(n_read <= 0)
+            break;
+        avl_add(user_list, client, sizeof(client_t), 0, 0);
+    }
+    free(client);
 
     create_server_thread(admin_server, &config_port, &admin_thread);
     create_server_thread(client_server, &client_port, &client_thread);

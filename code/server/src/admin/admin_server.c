@@ -3,7 +3,7 @@
 static void server_worker(server_t * server);
 static void handle_admin(admin_t * admin);
 
-static server_t * server;
+server_t * server;
 
 static void server_worker(server_t * server) {
     center_text(40, "---------------------------------------");
@@ -40,7 +40,7 @@ static void handle_admin(admin_t * admin) {
 
         command_found = cmd_function(admin, buffer, &exit);
         if(!command_found)
-            printf("[ADMIN] Command not found...\n");
+            write_fd(admin->socket, "Command not found\n");
         
         if(exit)
             break;
@@ -51,8 +51,6 @@ static void handle_admin(admin_t * admin) {
 }
 
 void admin_server(int * port) {
-    client_list = new_avl_tree(client_cmp, client_print);
-
     server = new_server(AF_INET, SOCK_STREAM, 0, INADDR_ANY, *port, 1, server_worker);
     server->worker(server);
 }

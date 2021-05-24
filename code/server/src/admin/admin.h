@@ -11,7 +11,6 @@ struct admin {
     struct sockaddr_in * admin;
 };
 
-
 extern admin_t * new_admin(int socket, struct sockaddr_in * admin);
 
 extern void free_admin(admin_t * admin);

@@ -6,15 +6,17 @@ static int get_balance(avl_node_t * node);
 static avl_node_t * right_rotation(avl_node_t * node);
 static avl_node_t * left_rotation(avl_node_t * node);
 
-static avl_node_t * private_avl_add(avl_tree_t * tree, avl_node_t * new_node, avl_node_t * current_node);
 static avl_node_t * private_avl_remove(void * data);
+static avl_node_t * private_avl_get(avl_tree_t * tree, avl_node_t * current, void * data);
+static avl_node_t * private_avl_add(avl_tree_t * tree, avl_node_t * new_node, avl_node_t * current_node);
+
 static void private_avl_print(avl_tree_t * tree, avl_node_t * node);
-static void * private_avl_get(avl_node_t * node);
 static void private_avl_print_client(avl_tree_t * tree, avl_node_t * node, void (* send_to_client)(void *, int socket), int socket);
 
-avl_tree_t * new_avl_tree(int (* data_cmp)(void *, void *), void (* print_data)(void *)) {
+avl_tree_t * new_avl_tree(int (* data_cmp)(void *, void *), void (* print_data)(void *), int fd) {
     avl_tree_t * tree = (avl_tree_t *) malloc(sizeof(avl_tree_t));
 
+    tree->fd = fd;
     tree->size = 0;
     tree->root = NULL;
     tree->data_cmp = data_cmp;
@@ -23,22 +25,34 @@ avl_tree_t * new_avl_tree(int (* data_cmp)(void *, void *), void (* print_data)(
     return tree;
 }
 
-avl_node_t * new_avl_node(void * data, size_t data_size) {
+avl_node_t * new_avl_node(void * data, size_t data_size, int free_data) {
     avl_node_t * node = (avl_node_t *) malloc(sizeof(avl_node_t));
 
     node->height = 1;
+    node->data = data;
     node->data = malloc(data_size);
     memcpy(node->data, data, data_size);
     node->left = NULL;
     node->right = NULL;
 
+    if(free_data)
+        free(data);
+
     return node;
 }
 
-void avl_add(avl_tree_t * tree, void * data, size_t data_size) {
-    avl_node_t * node = new_avl_node(data, data_size);
+int avl_add(avl_tree_t * tree, void * data, size_t data_size, int free_data, int write_data) {
+    if(private_avl_get(tree, tree->root, data) != NULL)
+        return AVL_DUPLICATED_KEY;
+    
+    if(write_data)
+        write(tree->fd, data, data_size);
+
+    avl_node_t * node = new_avl_node(data, data_size, free_data);
     tree->root = private_avl_add(tree, node, tree->root);
     tree->size++;
+
+    return AVL_OK;
 }
 
 void avl_remove(avl_tree_t * tree, void * data) {
@@ -46,7 +60,7 @@ void avl_remove(avl_tree_t * tree, void * data) {
 }
 
 void * avl_get(avl_tree_t * tree, void * data) {
-    return private_avl_get(tree->root);
+    return private_avl_get(tree, tree->root, data);
 }
 
 void avl_print(avl_tree_t * tree) {
@@ -94,8 +108,18 @@ static avl_node_t * private_avl_remove(void * data) {
     return NULL;
 }
 
-static void * private_avl_get(avl_node_t * node) {
-    return NULL;
+static avl_node_t * private_avl_get(avl_tree_t * tree, avl_node_t * current, void * data) {
+    if(current == NULL)
+        return NULL;
+    
+    int res = tree->data_cmp(data, current->data);
+
+    if(res < 0)
+        return private_avl_get(tree, current->left, data);
+    else if(res > 0)
+        return private_avl_get(tree, current->right, data);
+
+    return current;
 }
 
 static void private_avl_print(avl_tree_t * tree, avl_node_t * node) {

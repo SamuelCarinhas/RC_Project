@@ -9,8 +9,6 @@
 #include "../config/config.h"
 #include "../network/server.h"
 
-avl_tree_t * client_list;
-
 extern client_t * new_client(char * username, char * password, char * ip, int client_server, int p2p, int group);
 
 extern void free_client(client_t * client);
