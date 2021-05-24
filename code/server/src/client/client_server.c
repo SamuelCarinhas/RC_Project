@@ -19,7 +19,7 @@ static void udp_server_worker(server_t * server) {
     }
 }
 
-void client_server() {
-    udp_server = new_server(AF_INET, SOCK_DGRAM, 0, INADDR_ANY, 7000, 10, udp_server_worker);
+void client_server(int * port) {
+    udp_server = new_server(AF_INET, SOCK_DGRAM, 0, INADDR_ANY, *port, 10, udp_server_worker);
     udp_server->worker(udp_server);
 }

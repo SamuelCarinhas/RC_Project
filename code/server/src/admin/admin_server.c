@@ -50,9 +50,9 @@ static void handle_admin(admin_t * admin) {
 
 }
 
-void admin_server() {
+void admin_server(int * port) {
     client_list = new_avl_tree(client_cmp, client_print);
 
-    server = new_server(AF_INET, SOCK_STREAM, 0, INADDR_ANY, ADMIN_PORT, 1, server_worker);
+    server = new_server(AF_INET, SOCK_STREAM, 0, INADDR_ANY, *port, 1, server_worker);
     server->worker(server);
 }

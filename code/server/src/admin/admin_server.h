@@ -8,8 +8,6 @@
 #include "../config/config.h"
 #include "admin.h"
 
-#define ADMIN_PORT 7000
-
-extern void admin_server();
+extern void admin_server(int * port);
 
 #endif

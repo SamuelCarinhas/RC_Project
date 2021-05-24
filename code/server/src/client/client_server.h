@@ -5,6 +5,6 @@
 #include <stdlib.h>
 #include "../network/server.h"
 
-extern void client_server();
+extern void client_server(int * port);
 
 #endif
