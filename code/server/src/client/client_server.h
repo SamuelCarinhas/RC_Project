@@ -10,6 +10,8 @@
 #include "client.h"
 #include <arpa/inet.h>
 
+extern server_t * udp_server;
+
 extern void client_server(int * port);
 
 #endif

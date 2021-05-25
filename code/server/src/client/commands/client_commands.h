@@ -17,5 +17,7 @@ int client_cmd_function(client_session_t * client, char * command, int * exit);
 
 extern void cmd_login(client_session_t * client, char * command, int * exit);
 extern void cmd_msg(client_session_t * client, char * command, int * exit);
+extern void cmd_p2p(client_session_t * client, char * command, int * exit);
+extern void cmd_createmulticast(client_session_t * client, char * args, int * exit);
 
 #endif

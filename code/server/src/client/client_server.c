@@ -1,6 +1,6 @@
 #include "client_server.h"
 
-static server_t * udp_server;
+server_t * udp_server;
 
 static void udp_server_worker(server_t * server) {
     center_text(40, "---------------------------------------");
@@ -17,7 +17,7 @@ static void udp_server_worker(server_t * server) {
     while(1) {
         socklen_t len = sizeof(struct sockaddr_in);
 
-        char buffer[1000];
+        char buffer[BUFFER_SIZE];
         int n = recvfrom(server->socket, buffer, BUFFER_SIZE, 0, (struct sockaddr *) &client_sock, &len);
         buffer[n] = '\0';
         remove_end_line(buffer);
@@ -30,6 +30,6 @@ static void udp_server_worker(server_t * server) {
 }
 
 void client_server(int * port) {
-    udp_server = new_server(AF_INET, SOCK_DGRAM, 0, INADDR_ANY, *port, 10, udp_server_worker);
+    udp_server = new_server(AF_INET, SOCK_DGRAM, 0, INADDR_ANY, *port, 16, udp_server_worker);
     udp_server->worker(udp_server);
 }

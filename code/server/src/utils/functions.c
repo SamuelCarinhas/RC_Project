@@ -9,8 +9,6 @@ int send_udp_message(client_session_t * client, char * format, ...) {
     
     int res = sendto(client->socket, message, BUFFER_SIZE, 0, (struct sockaddr *) &client->sock, client->len);
 
-    printf("%d\n", client->sock.sin_port);
-
     va_end(args);
 
     return res;

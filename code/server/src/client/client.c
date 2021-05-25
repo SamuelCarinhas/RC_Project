@@ -53,6 +53,7 @@ client_session_t * init_client_session(struct sockaddr_in * sock, socklen_t len,
 
         return avl_get(user_session_list, &session);
     } else {
+        
         printf("[CLIENT] Loaded session for %s:%d\n", session.ip, session.port);
         return client_session;
     }
