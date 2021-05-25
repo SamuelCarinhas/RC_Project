@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -7,52 +8,42 @@
 #include <unistd.h>
 #include <netdb.h>
 #include <pthread.h>
+#include "config/config.h"
+#include "utils/functions.h"
 
-#define BUFLEN 1000
-
-char endServer[100];
-int fd, recv_len;
+char end_server[100];
+int server_socket, recv_len;
 struct sockaddr_in addr;
-struct hostent *hostPtr;
-socklen_t slen = sizeof(addr);
+struct hostent * host_ptr;
+socklen_t slen = sizeof(struct sockaddr_in);
 
-void erro(char *msg);
 void options();
 void send_msg();
 void send_2p2();
 void multicast();
-void leave();
-
 
 int main(int argc, char *argv[]) {
     
-    if(argc != 3){
-        printf("Cliente <host> <port> \n");
-        exit(-1);
-    }
+    if(argc != 3)
+        error("Invalid usage: Use ./client <HOST> <PORT>\n");
 
-    strcpy(endServer, argv[1]);
-    if((hostPtr = gethostbyname(endServer)) == 0){
-        erro("Could not obtain host");
-    }
+    strcpy(end_server, argv[1]);
+
+    if((host_ptr = gethostbyname(end_server)) == 0)
+        error("Could not obtain host\n");
     
-    bzero((void *) &addr, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = ((struct in_addr *)(hostPtr->h_addr))->s_addr;
+    addr.sin_addr.s_addr = ((struct in_addr *)(host_ptr->h_addr))->s_addr;
     addr.sin_port = htons((short) atoi(argv[2]));
 
-    //create UDP socket
-    if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1){
-        erro("Error opening socket");
-    }
+    if ((server_socket = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
+        error("Error opening socket\n");
 
-    //connects socket to receive data from sever
-    if(connect(fd, (struct sockaddr*)&addr, slen) == -1){
-        erro("Error conecting to server");
-    }
+    if(connect(server_socket, (struct sockaddr*)&addr, slen) == -1)
+        error("Error conecting to server\n");
 
 
-    char username[16], password[16];
+    char username[USERNAME_SIZE], password[PASSWORD_SIZE];
 
     while(1) {
         printf("Login menu:\n");
@@ -61,12 +52,12 @@ int main(int argc, char *argv[]) {
         printf("Password: ");
         scanf("%s", password);
 
-        char message[BUFLEN];
-        snprintf(message, BUFLEN, "LOGIN %s %s", username, password);
+        char message[BUFFER_SIZE];
+        snprintf(message, BUFFER_SIZE, "LOGIN %s %s", username, password);
 
-        sendto(fd, message, BUFLEN, 0, (struct sockaddr *) &addr, (socklen_t) slen);
+        sendto(server_socket, message, BUFFER_SIZE, 0, (struct sockaddr *) &addr, (socklen_t) slen);
 
-        int n = recvfrom(fd, message, BUFLEN, 0, (struct sockaddr *) &addr, &slen);
+        int n = recvfrom(server_socket, message, BUFFER_SIZE, 0, (struct sockaddr *) &addr, &slen);
         if(n <= 0) {
             printf("Error contacting the server...\n");
             continue;
@@ -78,16 +69,15 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    //sendto(fd, argv[], BUFLEN, 0, (struct sockaddr *) &addr, (socklen_t) slen);
-
     options();
 
-    close(fd);
+    close(server_socket);
+
     return 0;
 }
 
 void send_msg(){
-    char username[16], message[100], msg[BUFLEN];
+    char username[USERNAME_SIZE], message[100], msg[BUFFER_SIZE];
     printf("Send message to: ");
     scanf("%s", username);
     username[strcspn(username, "\n")] = '\0';
@@ -96,12 +86,12 @@ void send_msg(){
 
     printf("Message: ");
     scanf("%[^\n]s", message);
-    snprintf(msg, BUFLEN, "MSG %s %s", username, message);
+    snprintf(msg, BUFFER_SIZE, "MSG %s %s", username, message);
 
-    sendto(fd, msg, BUFLEN, 0, (struct sockaddr *) &addr, slen);
+    sendto(server_socket, msg, BUFFER_SIZE, 0, (struct sockaddr *) &addr, slen);
 
-    char response[BUFLEN];
-    int n = recvfrom(fd, response, BUFLEN, 0, (struct sockaddr *) &addr, &slen);
+    char response[BUFFER_SIZE];
+    int n = recvfrom(server_socket, response, BUFFER_SIZE, 0, (struct sockaddr *) &addr, &slen);
     if(n <= 0) {
         printf("Error contacting the server...\n");
     }
@@ -110,28 +100,20 @@ void send_msg(){
 }
 
 void send_2p2(){
-    char username[BUFLEN], message[100], msg[BUFLEN];
+    char username[BUFFER_SIZE], message[100], msg[BUFFER_SIZE];
     printf("Send message to: ");
     scanf("%s", username);
     username[strcspn(username, "\n")] = '\0';
 
     printf("Message: ");
     scanf("%s", message);
-    snprintf(msg, BUFLEN, "MSG %s %s", username, message);
+    snprintf(msg, BUFFER_SIZE, "MSG %s %s", username, message);
 
-    char response[BUFLEN];
-    int n = recvfrom(fd, response, BUFLEN, 0, (struct sockaddr *) &addr, &slen);
+    char response[BUFFER_SIZE];
+    int n = recvfrom(server_socket, response, BUFFER_SIZE, 0, (struct sockaddr *) &addr, &slen);
     if(n <= 0) {
         printf("Error contacting the server...\n");
     }
-
-    //struct sockaddr_in rcv;
-    
-
-
-
-
-    
 }
 
 void multicast(){
@@ -162,22 +144,7 @@ void options() {
             break;
         case 4:
             printf("Leaving\n");
-            leave();
+            close(server_socket);
             break;
     }
-}
-
-
-
-
-void leave(){
-    //close socket
-    close(fd);
-    
-    exit(0);
-}
-
-void erro(char *msg){
-    printf("Erro: %s\n", msg);
-    exit(-1);
 }

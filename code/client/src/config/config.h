@@ -1,0 +1,9 @@
+#ifndef CONFIG_HEADER
+#define CONFIG_HEADER
+
+#define BUFFER_SIZE 1000
+
+#define USERNAME_SIZE 16
+#define PASSWORD_SIZE 32
+
+#endif
