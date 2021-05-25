@@ -38,6 +38,7 @@ int server_socket, multicast_write_socket, multicast_read_socket, p2p_socket;
 unsigned long multicast_ip = INVALID_GROUP;
 
 void * read_msg();
+void * read_multicast();
 
 int main(int argc, char *argv[]) {
     
@@ -74,7 +75,7 @@ int main(int argc, char *argv[]) {
     int res = setsockopt(multicast_write_socket, IPPROTO_IP, IP_MULTICAST_LOOP, &false, sizeof(int));
     if(res < 0)
         error("Couldn't update multicast writing socket. (LOOP)\n");
-
+    
     int ttl = 255;
     res = setsockopt(multicast_write_socket, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, sizeof(int));
     if(res < 0)
@@ -82,6 +83,7 @@ int main(int argc, char *argv[]) {
 
     // END multicast
 
+    pthread_create(&multicast_thread, NULL, read_multicast, NULL);
 
     authenticate();
 
