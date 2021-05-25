@@ -11,22 +11,31 @@
 #include "config/config.h"
 #include "utils/functions.h"
 #include <arpa/inet.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
 
-char end_server[100];
-int sock;
-int server_socket, recv_len;
-struct sockaddr_in addr, self_addr;
-struct hostent * host_ptr;
+#define MULTICAST_PORT 9000
+#define GROUP_SIZE 16
+#define INVALID_GROUP 1
+
+char end_server[100], current_group[GROUP_SIZE];
+struct sockaddr_in server_addr, multicast_addr;
 socklen_t slen = sizeof(struct sockaddr_in);
 
 void options();
 void send_msg();
 void send_p2p();
-void multicast();
+void create_group_multicast();
+void connect_multicast();
+void send_multicast();
+void authenticate();
+pthread_t message_thread, multicast_thread;
 
-pthread_t thread;
+int message_port;
 
-int message_port = 9000;
+int server_socket, multicast_write_socket, multicast_read_socket, p2p_socket;
+
+unsigned long multicast_ip = INVALID_GROUP;
 
 void * read_msg();
 
@@ -35,57 +44,47 @@ int main(int argc, char *argv[]) {
     if(argc != 3)
         error("Invalid usage: Use ./client <HOST> <PORT>\n");
 
+    // START Server
+
     strcpy(end_server, argv[1]);
 
+    struct hostent * host_ptr;
     if((host_ptr = gethostbyname(end_server)) == 0)
         error("Could not obtain host\n");
     
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = ((struct in_addr *)(host_ptr->h_addr))->s_addr;
-    addr.sin_port = htons((short) atoi(argv[2]));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = ((struct in_addr *)(host_ptr->h_addr))->s_addr;
+    server_addr.sin_port = htons((short) atoi(argv[2]));
 
-    if ((server_socket = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
-        error("Error opening socket\n");
+    server_socket = create_socket();
+
+    // END Server
+
+    // P2P Start
+
+    p2p_socket = create_socket();
+
+    // P2P End
+
+    // START multicast
+    multicast_write_socket = create_socket();
+    multicast_read_socket = create_socket();
     
-    pthread_create(&thread, NULL, &read_msg, NULL);
+    int false = 0;
+    int res = setsockopt(multicast_write_socket, IPPROTO_IP, IP_MULTICAST_LOOP, &false, sizeof(int));
+    if(res < 0)
+        error("Couldn't update multicast writing socket. (LOOP)\n");
 
-    char username[USERNAME_SIZE], password[PASSWORD_SIZE];
+    int ttl = 255;
+    res = setsockopt(multicast_write_socket, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, sizeof(int));
+    if(res < 0)
+        error("Couldn't update multicast writing socket. (TTL)\n");
 
-    while(1) {
-        printf("Login menu:\n");
-        printf("Username: ");
-        scanf("%s", username);
-        printf("Password: ");
-        scanf("%s", password);
+    // END multicast
 
-        char message[BUFFER_SIZE];
-        snprintf(message, BUFFER_SIZE, "LOGIN %s %s", username, password);
 
-        sendto(server_socket, message, BUFFER_SIZE, 0, (struct sockaddr *) &addr, (socklen_t) slen);
+    authenticate();
 
-        int n = recvfrom(server_socket, message, BUFFER_SIZE, 0, (struct sockaddr *) &addr, &slen);
-        if(n <= 0) {
-            printf("Error contacting the server...\n");
-            continue;
-        }
-        printf("%s", message);
-
-        if(strcmp(message, "Login successfully\n") == 0) {
-            n = recvfrom(server_socket, message, BUFFER_SIZE, 0, (struct sockaddr *) &addr, &slen);
-            if(n <= 0) {
-                printf("Error contacting the server...\n");
-                continue;
-            }
-
-            printf("%s", message);
-            break;
-        }
-
-    }
-
-    options();
-
-    close(server_socket);
 
     return 0;
 }
@@ -102,15 +101,13 @@ void send_msg(){
     scanf("%[^\n]s", message);
     snprintf(msg, BUFFER_SIZE, "MSG %s %s", username, message);
 
-    sendto(server_socket, msg, BUFFER_SIZE, 0, (struct sockaddr *) &addr, slen);
+    sendto(server_socket, msg, BUFFER_SIZE, 0, (struct sockaddr *) &server_addr, slen);
 
-    char response[BUFFER_SIZE];
-    int n = recvfrom(server_socket, response, BUFFER_SIZE, 0, (struct sockaddr *) &addr, &slen);
-    if(n <= 0) {
-        printf("Error contacting the server...\n");
-    }
+    int res = recvfrom(server_socket, message, BUFFER_SIZE, 0, (struct sockaddr *) &server_addr, &slen);
+    if(res <= 0)
+        error("Lost connection with the server...\n");
 
-    printf("%s", response);
+    printf("%s", message);
 }
 
 void send_p2p(){
@@ -121,15 +118,13 @@ void send_p2p(){
 
     snprintf(msg, BUFFER_SIZE, "P2P %s", username);
 
-    sendto(server_socket, msg, BUFFER_SIZE, 0, (struct sockaddr *) &addr, slen);
+    sendto(server_socket, msg, BUFFER_SIZE, 0, (struct sockaddr *) &server_addr, slen);
 
     char response[BUFFER_SIZE];
-    int res = recvfrom(server_socket, response, BUFFER_SIZE, 0, (struct sockaddr *) &addr, &slen);
+    int res = recvfrom(server_socket, response, BUFFER_SIZE, 0, (struct sockaddr *) &server_addr, &slen);
     if(res <= 0) {
         printf("Error contacting the server...\n");
     }
-
-    printf("%s", response);
 
     char ip[INET_ADDRSTRLEN];
     int port;
@@ -146,39 +141,106 @@ void send_p2p(){
     printf("Message: ");
     scanf("%[^\n]s", message);
 
-    int target_socket;
     struct sockaddr_in target_addr;
-    struct hostent * target_host;
     socklen_t len = sizeof(struct sockaddr_in);
 
-    if((target_host = gethostbyname(ip)) == 0) {
-        printf("Invalid USER ip\n");
-        return;
-    }
+    printf("Send to %s:%d\n", ip, port);
 
     target_addr.sin_family = AF_INET;
-    target_addr.sin_addr.s_addr = ((struct in_addr *)(host_ptr->h_addr))->s_addr;
-    target_addr.sin_port = htons(message_port);
+    target_addr.sin_addr.s_addr = inet_addr(ip);
+    target_addr.sin_port = htons(port);
 
-    if ((target_socket = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-        printf("Error opening USER socket\n");
-        return;
-    }
-
-    if(connect(target_socket, (struct sockaddr*)&target_addr, len) < 0) {
-        error("Error conecting to USER\n");
-        return;
-    }
     
-    
-    send(target_socket, message, BUFFER_SIZE, 0);
-
-    printf("Message sent to %s:%d\n", ip, target_addr.sin_port);
-
+    sendto(p2p_socket, message, BUFFER_SIZE, 0, (struct sockaddr *) &target_addr, (socklen_t) len);
 }
 
-void multicast(){
+void create_group_multicast() {
+    char group_name[16], message[BUFFER_SIZE + 17];
 
+    printf("Create group name: ");
+    while(fgetc(stdin) != '\n');
+    
+    scanf("%[^\n]s", group_name);
+
+    snprintf(message, BUFFER_SIZE + 17, "CREATEMULTICAST %s", group_name);
+
+    sendto(server_socket, message, BUFFER_SIZE, 0, (struct sockaddr *) &server_addr, (socklen_t) slen);
+
+    int res = recvfrom(server_socket, message, BUFFER_SIZE, 0, (struct sockaddr *) &server_addr, &slen);
+    if(res <= 0) {
+        printf("Error contacting the server...\n");
+        return;
+    }
+
+    printf("%s", message);
+}
+
+void connect_multicast() {
+    char group_name[GROUP_SIZE], message[BUFFER_SIZE + GROUP_SIZE + 1];
+
+    printf("Connect to group: ");
+    while(fgetc(stdin) != '\n');
+    
+    scanf("%[^\n]s", group_name);
+
+    snprintf(message, BUFFER_SIZE + 17, "GETMULTICAST %s", group_name);
+
+    sendto(server_socket, message, BUFFER_SIZE, 0, (struct sockaddr *) &server_addr, (socklen_t) slen);
+
+    int res = recvfrom(server_socket, message, BUFFER_SIZE, 0, (struct sockaddr *) &server_addr, &slen);
+    if(res <= 0) {
+        printf("Error contacting the server...\n");
+        return;
+    }
+
+    if(!starts_with(message, "Multicast IP")) {
+        printf("%s", message);
+        return;
+    }
+
+    char ip[INET_ADDRSTRLEN];
+    res = sscanf(message, "Multicast IP %s", ip);
+    if(res != 1) {
+        printf("Something went wrong...\n");
+        return;
+    }
+
+
+    inet_pton(AF_INET, ip, &multicast_ip);
+
+    struct ip_mreqn multicast;
+    multicast.imr_multiaddr.s_addr = multicast_ip;
+    multicast.imr_address.s_addr = htonl(INADDR_ANY);
+    multicast.imr_ifindex = 0;
+
+    res = setsockopt(multicast_read_socket, IPPROTO_IP, IP_ADD_MEMBERSHIP, &multicast, sizeof(multicast));
+    if(res < 0) {
+        printf("Couldn't add membership to the multicast socket\n");
+        return;
+    }
+
+    strcpy(current_group, group_name);
+    multicast_addr.sin_family = AF_INET;
+    multicast_addr.sin_addr.s_addr = multicast_ip;
+    multicast_addr.sin_port = htons(MULTICAST_PORT);
+
+    printf("Multicast IP: %s\n", ip);
+}
+
+void send_multicast() {
+    if(multicast_ip == INVALID_GROUP) {
+        printf("You are not in a group\n");
+        return;
+    } else {
+        char message[BUFFER_SIZE];
+        while(fgetc(stdin) != '\n');
+
+        printf("Write message [%s]: ", current_group);
+        
+        scanf("%[^\n]s", message);
+
+        sendto(multicast_write_socket, message, BUFFER_SIZE, 0, (struct sockaddr *) &multicast_addr, sizeof(multicast_addr));
+    }
 }
 
 void options() {
@@ -187,7 +249,9 @@ void options() {
         printf("Menu:\n");
         printf("\t1 - Send message via Server\n");
         printf("\t2 - Send message via P2P\n");
-        printf("\t3 - Send group message\n");
+        printf("\t3 - Create multicast group\n");
+        printf("\t4 - Connect to multicast group\n");
+        printf("\t5 - Send message to multicast group\n");
         printf("\t0 - Exit\n");
         printf("Choose an option:\n");
         scanf("%d", &option);
@@ -199,11 +263,20 @@ void options() {
                 send_p2p();
                 break;
             case 3:
-                multicast();
+                create_group_multicast();
+                break;
+            case 4:
+                connect_multicast();
+                break;
+            case 5:
+                send_multicast();
                 break;
             case 0:
                 printf("Leaving\n");
                 close(server_socket);
+                break;
+            default:
+                printf("Option not found\n");
                 break;
         }
     } while (option != 0);
@@ -216,7 +289,7 @@ void * read_msg() {
     struct sockaddr_in message_addr;
 
     message_addr.sin_family = AF_INET;
-    message_addr.sin_addr.s_addr = INADDR_ANY;
+    message_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     message_addr.sin_port = htons(message_port);
 
     int sock = socket(AF_INET, SOCK_DGRAM, 0);
@@ -235,9 +308,80 @@ void * read_msg() {
         int valread = recvfrom(sock, buffer, BUFFER_SIZE, 0, (struct sockaddr *) &message_addr, &len);
         inet_ntop(AF_INET, &message_addr.sin_addr, ip, INET_ADDRSTRLEN);
         if(valread <= 0) {
-            printf("..\n");
+            printf("Message read error\n");
             continue;
         }
-        printf("Private message received from %s: %s\n", ip, buffer);
+        printf("[Message received from %s] %s\n", ip, buffer);
+    }
+}
+
+void * read_multicast() {
+    char buffer[BUFFER_SIZE];
+
+    struct sockaddr_in multicast_addr;
+
+    multicast_addr.sin_family = AF_INET;
+    multicast_addr.sin_addr.s_addr = INADDR_ANY;
+    multicast_addr.sin_port = htons(MULTICAST_PORT);
+
+    socklen_t len = sizeof(struct sockaddr_in);
+
+	if (bind(multicast_read_socket, (struct sockaddr *) &multicast_addr, sizeof(struct sockaddr_in)))
+		error("%s\n", "Couldn't bind message socket.\n");
+
+
+    while(1) {
+        int valread = recvfrom(multicast_read_socket, buffer, BUFFER_SIZE, 0, (struct sockaddr *) &multicast_addr, &len);
+        if(valread <= 0) {
+            printf("Multicast read error\n");
+            break;
+        }
+        printf("[Multicast] %s\n", buffer);
+    }
+
+    return NULL;
+}
+
+void authenticate() {
+    char username[USERNAME_SIZE], password[PASSWORD_SIZE];
+
+    printf("Login menu:\n");
+    printf("Username: ");
+    scanf("%s", username);
+    printf("Password: ");
+    scanf("%s", password);
+
+    char message[BUFFER_SIZE];
+    snprintf(message, BUFFER_SIZE, "LOGIN %s %s", username, password);
+
+    sendto(server_socket, message, BUFFER_SIZE, 0, (struct sockaddr *) &server_addr, (socklen_t) slen);
+
+    int n = recvfrom(server_socket, message, BUFFER_SIZE, 0, (struct sockaddr *) &server_addr, &slen);
+    if(n <= 0)
+        error("Error contacting the server...\n");
+
+    printf("%s", message);
+
+    if(strcmp(message, "Login successfully\n") == 0) {
+        n = recvfrom(server_socket, message, BUFFER_SIZE, 0, (struct sockaddr *) &server_addr, &slen);
+        if(n <= 0)
+            error("Error contacting the server...\n");
+
+        int res = sscanf(message, "%d", &message_port);
+
+        pthread_create(&message_thread, NULL, &read_msg, NULL);
+
+        if(res != 1)
+            error("Something went wrong...\n");
+
+        n = recvfrom(server_socket, message, BUFFER_SIZE, 0, (struct sockaddr *) &server_addr, &slen);
+        if(n <= 0)
+            error("Error contacting the server...\n");
+
+        printf("%s", message);
+
+        options();
+
+        close(server_socket);
     }
 }
