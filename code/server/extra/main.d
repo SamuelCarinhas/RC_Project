@@ -26,6 +26,7 @@ extra/main.o: src/main.c src/data_structures/avl_tree.h \
  src/client/commands/../../utils/functions.h \
  src/client/commands/../../memory/memory.h \
  src/client/commands/../../data_structures/avl_tree.h \
- src/client/../network/server.h src/client/../utils/string.h \
- src/client/client.h src/client/client_struct.h src/config/config.h \
- src/memory/memory.h
+ src/client/commands/../../group/group.h src/client/../network/server.h \
+ src/client/../utils/string.h src/client/client.h \
+ src/client/client_struct.h src/config/config.h src/memory/memory.h \
+ src/group/group.h

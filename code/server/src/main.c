@@ -17,11 +17,18 @@
 #include "client/client_struct.h"
 #include "config/config.h"
 #include "memory/memory.h"
+#include "group/group.h"
 
 pthread_t admin_thread, client_thread;
 
 avl_tree_t * user_list;
 avl_tree_t * user_session_list;
+avl_tree_t * group_list;
+
+char * groups[] = {"239.0.0.1", "239.0.0.2", "239.0.0.3", "239.0.0.4", "239.0.0.5", "239.0.0.6"};
+
+int current_group;
+int max_groups = sizeof(groups)/sizeof(groups[0]);
 
 void print_node(void * data) {
     printf("%s\n", (char *) data);
@@ -30,6 +37,17 @@ void print_node(void * data) {
 void print_session(void * data) {
     client_session_t * session = (client_session_t *) data;
     printf("(%s:%d) %s\n", session->ip, session->port, session->client->username);
+}
+
+void print_group(void * data) {
+
+}
+
+int group_cmp(void * a, void * b) {
+    group_t * group_a = (group_t *) a,
+                * group_b = (group_t *) b;
+    
+    return strcmp(group_a->name, group_b->name);
 }
 
 int data_cmp(void * a, void * b) {
@@ -48,7 +66,7 @@ int session_cmp(void * a, void * b) {
 }
 
 void signal_sigint() {
-    printf("Hello there\n");
+    printf("Finish\n");
     exit(0);
 }
 
@@ -80,6 +98,7 @@ int main(int arg_count, char * args[]) {
 
     user_list = new_avl_tree(data_cmp, print_node, records_fd);
     user_session_list = new_avl_tree(session_cmp, print_session, -1);
+    group_list = new_avl_tree(group_cmp, print_group, 1);
 
     int n_read;
     client_t client;
@@ -89,6 +108,8 @@ int main(int arg_count, char * args[]) {
             break;
         avl_add(user_list, &client, sizeof(client_t), 0, 0);
     }
+
+    printf("Current multicast: %s\n", groups[current_group]);
 
     create_server_thread(admin_server, &config_port, &admin_thread);
     create_server_thread(client_server, &client_port, &client_thread);

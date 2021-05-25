@@ -7,13 +7,15 @@ char * client_commands[] = {
     "MSG",
     "P2P",
     "CREATEMULTICAST",
+    "GETMULTICAST"
 };
 
 void (* client_cmd_functions[])(client_session_t * client, char * args, int * exit) = {
     cmd_login,
     cmd_msg,
     cmd_p2p,
-    cmd_createmulticast
+    cmd_createmulticast,
+    cmd_getmulticast
 };
 
 int client_cmd_function(client_session_t * client, char * command, int * exit) {
@@ -68,6 +70,7 @@ void cmd_login(client_session_t * client, char * args, int * exit) {
                 strcpy(database_client->ip, client->ip);
                 client->logged_in = 1;
                 send_udp_message(client, "Login successfully\n");
+                send_udp_message(client, "%d\n", client->port);
 
                 char * answer[] = {"NO", "YES"};
 
@@ -115,8 +118,22 @@ void cmd_msg(client_session_t * client, char * args, int * exit) {
 
             if(client_session == NULL)
                 send_udp_message(client, "Couldn't find user session\n");
-            else
-                send_udp_message(client_session, "[%s] %s\n", client->client->username, message);
+            else {
+                char send_message[BUFFER_SIZE+100];
+                snprintf(send_message, BUFFER_SIZE+100, "%s (%s:%d) : %s", client->client->username, client->ip, client->port, message);
+                
+                struct sockaddr_in target_addr;
+                socklen_t len = sizeof(struct sockaddr_in);
+
+                target_addr.sin_family = AF_INET;
+                target_addr.sin_addr.s_addr = client_session->sock.sin_addr.s_addr;
+                target_addr.sin_port = htons(client_session->port);
+                
+                sendto(client_session->socket, send_message, BUFFER_SIZE, 0, (struct sockaddr *) &target_addr, (socklen_t) len);
+
+                send_udp_message(client, "Message sent\n");
+
+            }
         }
     }
 }
@@ -158,7 +175,7 @@ void cmd_p2p(client_session_t * client, char * args, int * exit) {
             if(client_session == NULL)
                 send_udp_message(client, "Couldn't find user session\n");
             else
-                send_udp_message(client, "%s IP: %s, Port: %d\n", username, client_session->ip, client_session->port);
+                send_udp_message(client, "%s IP: %s Port: %d\n", username, client_session->ip, client_session->port);
         }
     }
 }
@@ -167,17 +184,76 @@ void cmd_createmulticast(client_session_t * client, char * args, int * exit) {
     UNUSED(exit);
     UNUSED(args);
 
+
     if(!client->logged_in) {
         send_udp_message(client, "You need to be logged in to perform this command\n");
         return;
     }
 
-    if(!client->client->group) {
-        send_udp_message(client, "You do not have permission to use this command\n");
+    char group_name[MAX_GROUP_NAME];
+
+    int res = sscanf(args, "%s", group_name);
+
+    if(res != 1)
+        send_udp_message(client, "Invalid usage! Use: CREATEMULTICAST <GROUP-ID>\n");
+    else {
+        if(!client->client->group) {
+            send_udp_message(client, "You do not have permission to use this command\n");
+            return;
+        }
+
+        group_t * group = new_group(group_name, "");
+        group_t * temp_group = (group_t *) avl_get(group_list, group);
+
+        if(temp_group != NULL) {
+            send_udp_message(client, "Duplicated group name\n");
+            return;
+        } 
+
+        if(current_group < max_groups) {
+            char * ip = groups[current_group++];
+            strcpy(group->ip, ip);
+            avl_add(group_list, group, sizeof(group_t), 1, 0);
+            send_udp_message(client, "Group %s Multicast ip: %s\n", group_name, ip);
+        } else {
+            free(group);
+            send_udp_message(client, "Cannot create more groups\n");
+        }
+    }
+}
+
+void cmd_getmulticast(client_session_t * client, char * args, int * exit) {
+    UNUSED(exit);
+    UNUSED(args);
+
+
+    if(!client->logged_in) {
+        send_udp_message(client, "You need to be logged in to perform this command\n");
         return;
     }
 
-    send_udp_message(client, "Multicast IP created\n");
+    char group_name[MAX_GROUP_NAME];
+
+    int res = sscanf(args, "%s", group_name);
+
+    if(res != 1)
+        send_udp_message(client, "Invalid usage! Use: GETMULTICAST <GROUP-ID>\n");
+    else {
+        if(!client->client->group) {
+            send_udp_message(client, "You do not have permission to use this command\n");
+            return;
+        }
+
+        group_t * group = new_group(group_name, "");
+        group_t * temp_group = (group_t *) avl_get(group_list, group);
+
+        free(group);
+
+        if(temp_group == NULL)
+            send_udp_message(client, "Group not found\n");
+        else
+            send_udp_message(client, "Multicast IP %s\n", temp_group->ip);
+    }
 }
 
 static void write_client_log(client_session_t * client, char * format, ...) {

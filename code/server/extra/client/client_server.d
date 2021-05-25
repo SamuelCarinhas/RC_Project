@@ -17,5 +17,5 @@ extra/client/client_server.o: src/client/client_server.c \
  src/client/commands/../../utils/functions.h \
  src/client/commands/../../memory/memory.h \
  src/client/commands/../../data_structures/avl_tree.h \
- src/client/../network/server.h src/client/../utils/string.h \
- src/client/client.h
+ src/client/commands/../../group/group.h src/client/../network/server.h \
+ src/client/../utils/string.h src/client/client.h
