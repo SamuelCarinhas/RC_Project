@@ -1,3 +1,12 @@
+/**
+ * Project: RC 2021
+ * 
+ * Authors:
+ *  Samuel dos Santos Carinhas - 2019217199
+ *  Carlos Eduardo da Costa Jordão - 2019221373
+ * 
+ */
+
 #include "client_commands.h"
 
 static void write_client_log(client_session_t * client, char * format, ...);
@@ -82,6 +91,8 @@ void cmd_login(client_session_t * client, char * args, int * exit) {
     }
 }
 
+// Message Client-Server
+// MSG USER MESSAGE...
 void cmd_msg(client_session_t * client, char * args, int * exit) {
     UNUSED(exit);
 
@@ -138,6 +149,7 @@ void cmd_msg(client_session_t * client, char * args, int * exit) {
     }
 }
 
+// P2P USERNAME
 void cmd_p2p(client_session_t * client, char * args, int * exit) {
     UNUSED(exit);
 
@@ -180,6 +192,7 @@ void cmd_p2p(client_session_t * client, char * args, int * exit) {
     }
 }
 
+//  CREATEMULTICAST NOME_GRUPO
 void cmd_createmulticast(client_session_t * client, char * args, int * exit) {
     UNUSED(exit);
     UNUSED(args);
@@ -222,6 +235,7 @@ void cmd_createmulticast(client_session_t * client, char * args, int * exit) {
     }
 }
 
+// GETMULTICAST NOME_GROUP
 void cmd_getmulticast(client_session_t * client, char * args, int * exit) {
     UNUSED(exit);
     UNUSED(args);

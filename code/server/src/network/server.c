@@ -1,5 +1,17 @@
+/**
+ * Project: RC 2021
+ * 
+ * Authors:
+ *  Samuel dos Santos Carinhas - 2019217199
+ *  Carlos Eduardo da Costa Jordão - 2019221373
+ * 
+ */
+
 #include "server.h"
 
+// service -> TCP/UDP
+// dominio -> faimilia
+// interface -> ip
 server_t * new_server(int domain, int service, int protocol, u_long interface, int port, int backlog, void (* worker) (server_t * server)) {
     server_t * server = (server_t *) malloc(sizeof(server_t));
 

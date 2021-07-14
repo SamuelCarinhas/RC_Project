@@ -39,6 +39,7 @@ void cmd_list(admin_t * admin, char * args, int * exit) {
     avl_print_client(user_list, send_to_client, admin->socket);
 }
 
+// ADD username ip password perm_client_server perm_p2p perm_group
 void cmd_add(admin_t * admin, char * args, int * exit) {
     *exit = 0;
 
@@ -61,6 +62,7 @@ void cmd_add(admin_t * admin, char * args, int * exit) {
 
 }
 
+// DEL username
 void cmd_del(admin_t * admin, char * args, int * exit) {
     *exit = 0;
 
